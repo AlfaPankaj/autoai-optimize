@@ -3,7 +3,7 @@
 > **Don't just rank on Google. Get cited by AI for Free.**
 > *Make your website natively readable by ChatGPT, Google, and Siri—in just one line of code.*
 
-[![PyPI version](https://badge.fury.io/py/autoai-optimize.svg)](https://badge.fury.io/py/autoai-optimize) 
+[![PyPI version](https://badge.fury.io/py/autoai-optimize.svg)]([https://badge.fury.io/py/autoai-optimize](https://pypi.org/project/autoai-optimize/)) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **AutoAI-Optimize** is an enterprise-grade Python library that automatically translates your web application into structured data (JSON-LD / Schema.org) so that AI Agents can natively understand your business.
