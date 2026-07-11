@@ -43,6 +43,7 @@ fastapi = ["fastapi>=0.100", "starlette>=0.27"]
 django = ["django>=4.2"]
 dev = [
     "pytest>=7.4",
+    "pytest-cov>=4.1",
     "pytest-asyncio>=0.21",
     "httpx>=0.24",
     "fastapi>=0.100",
