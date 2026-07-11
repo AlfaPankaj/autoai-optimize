@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoai-optimize"
-version = "1.0.1"
+version = "1.0.2"
 description = "One-line Python middleware that auto-injects Schema.org / JSON-LD into your web pages for better SEO, voice search, and AI-agent discovery."
 readme = "README.md"
 requires-python = ">=3.10"
