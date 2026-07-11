@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from starlette.testclient import TestClient
 
-from autoai_optimize.frameworks.fastapi import AutoAIMiddleware
+from src.autoai_optimize.frameworks.fastapi import AutoAIMiddleware
 
 
 def test_middleware_injects_jsonld():
@@ -38,7 +38,7 @@ def test_middleware_non_html_passthrough():
 def test_middleware_respects_deny_paths():
     app = FastAPI()
     # Disable processing for /admin
-    from autoai_optimize.config import Config
+    from src.autoai_optimize.config import Config
     cfg = Config(deny_paths=("/admin/",))
     app.add_middleware(AutoAIMiddleware, config=cfg)
 

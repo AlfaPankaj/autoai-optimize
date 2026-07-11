@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from autoai_optimize.core import optimize_html
-from autoai_optimize.offload import prepopulate_cache_from_folder
+from src.autoai_optimize.core import optimize_html
+from src.autoai_optimize.offload import prepopulate_cache_from_folder
 
 
 def test_offload_populates_cache_and_optimize_on_hit():

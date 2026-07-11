@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from autoai_optimize.analyze.classifier import PageType
-from autoai_optimize.schema.article import ArticleBuilder
-from autoai_optimize.schema.product import ProductBuilder
-from autoai_optimize.schema.registry import build_for, has_required_fields
+from src.autoai_optimize.analyze.classifier import PageType
+from src.autoai_optimize.schema.article import ArticleBuilder
+from src.autoai_optimize.schema.product import ProductBuilder
+from src.autoai_optimize.schema.registry import build_for, has_required_fields
 
 
 class TestArticleBuilder:

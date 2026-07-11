@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from autoai_optimize.analyze.extractors import _extract_price
+from src.autoai_optimize.analyze.extractors import _extract_price
 
 
 def _soup(html: str) -> BeautifulSoup:

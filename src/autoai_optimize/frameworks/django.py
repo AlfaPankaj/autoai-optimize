@@ -37,10 +37,10 @@ from typing import Any
 from django.conf import settings  # type: ignore
 from django.http import HttpRequest, HttpResponse  # type: ignore
 
-from autoai_optimize.analyze.hints import HINT_HEADER
-from autoai_optimize.config import Config
-from autoai_optimize.core import optimize_html
-from autoai_optimize.utils import get_logger, is_html_content_type
+from src.autoai_optimize.analyze.hints import HINT_HEADER
+from src.autoai_optimize.config import Config
+from src.autoai_optimize.core import optimize_html
+from src.autoai_optimize.utils import get_logger, is_html_content_type
 
 _log = get_logger()
 
@@ -112,8 +112,13 @@ class AutoAIMiddleware:
 
         response.content = enriched.encode("utf-8")
         response["Content-Type"] = "text/html; charset=utf-8"
-        # Remove Content-Length so Django re-calculates it.
-        response.pop("Content-Length", None)
+        # Remove Content-Length so Django re-calculates it for the new body.
+        # HttpResponse has no .pop(); use dict-style deletion, guarded because
+        # the header may be absent on some responses.
+        try:
+            del response["Content-Length"]
+        except KeyError:
+            pass
         return response
 
     # ------------------------------------------------------------------

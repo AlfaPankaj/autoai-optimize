@@ -4,10 +4,10 @@ import hashlib
 from collections.abc import Iterable
 from pathlib import Path
 
-import autoai_optimize.core as core
-from autoai_optimize.core import generate_jsonld
-from autoai_optimize.inject.html import inject_jsonld
-from autoai_optimize.utils import get_logger
+import src.autoai_optimize.core as core
+from src.autoai_optimize.core import generate_jsonld
+from src.autoai_optimize.inject.html import inject_jsonld
+from src.autoai_optimize.utils import get_logger
 
 _log = get_logger()
 

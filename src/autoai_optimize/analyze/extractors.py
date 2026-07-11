@@ -13,7 +13,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from autoai_optimize.analyze.hints import PageHint
+from src.autoai_optimize.analyze.hints import PageHint
 
 
 def _first_text(
@@ -38,10 +38,16 @@ def _meta_content(
 ) -> str | None:
     for name, attrs in selectors:
         tag = soup.find(name, attrs=attrs)
-        if tag and tag.get("content"):
+        if tag is None:
+            continue
+        # Meta tags expose their value via `content`; <time> uses `datetime`.
+        value = tag.get("content")
+        if value is None:
+            value = tag.get("datetime")
+        if value:
             if ai_field:
                 tag.attrs["data-ai-field"] = ai_field
-            return str(tag["content"]).strip()
+            return str(value).strip()
     return None
 
 
@@ -202,18 +208,24 @@ def _extract_price(soup: BeautifulSoup) -> str | None:
     for el in soup.find_all(string=True):
         txt = str(el)
         m = symbol_pattern_pre.search(txt)
-        if not m:
-            m = symbol_pattern_post.search(txt)
         if m:
-            num = m.group(2) if len(m.groups()) >= 2 else m.group(1)
-            return normalize_num(num)
+            return normalize_num(m.group(2))
+        m = symbol_pattern_post.search(txt)
+        if m:
+            # group(1) is the number, group(2) is the symbol.
+            return normalize_num(m.group(1))
 
-    # 3) Currency code suffix/prefix e.g. '1000 INR' or 'EUR 1.234,56'
-    code_pattern = re.compile(r"(\d[\d.,]*)\s?(USD|EUR|GBP|INR)", re.IGNORECASE)
-    for el in soup.find_all(string=code_pattern):
-        m = code_pattern.search(str(el))
+    # 3) Currency code suffix or prefix, e.g. '1000 INR' or 'EUR 1.234,56'
+    code_suffix = re.compile(r"(\d[\d.,]*)\s?(USD|EUR|GBP|INR)", re.IGNORECASE)
+    code_prefix = re.compile(r"(USD|EUR|GBP|INR)\s?(\d[\d.,]*)", re.IGNORECASE)
+    for el in soup.find_all(string=True):
+        txt = str(el)
+        m = code_suffix.search(txt)
         if m:
             return normalize_num(m.group(1))
+        m = code_prefix.search(txt)
+        if m:
+            return normalize_num(m.group(2))
 
     # 4) Fallback: any 1-4 digit group with decimals and currency nearby
     generic = re.compile(r"\d+[.,]\d{2}")

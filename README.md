@@ -12,14 +12,14 @@ By making your website semantically readable, you dramatically improve **SEO**, 
 
 ## Why This Matters (For Business & Marketing Leaders)
 AI Search Engines don't "read" websites the way humans do. If an AI can't parse your product catalog or blog, you lose traffic. 
-1. **82% Higher CTR:** Pages with structured JSON achieve 82% higher click-through rates.
+1. **Higher CTR:** Studies consistently show that pages with structured JSON-LD earn higher click-through rates in search results (source: [Google Search Central](https://developers.google.com/search/docs/appearance/structured-data/search-results)). Your mileage varies — measure your own A/B results.
 2. **Instant Indexing:** Sync updates to AI engines in **seconds** via Webhooks, rather than waiting 24+ hours for traditional crawlers.
 3. **AI Search Visibility:** Perplexity, Claude, and Gemini heavily prioritize websites that offer well-structured data.
 4. **Zero Maintenance:** The Python library dynamically auto-updates as your site changes. No manual JSON editing required.
 
 ## Why This Matters (For Engineering Leaders)
 This library is built with a highly modular architecture focused on **performance** and **safety**:
-1. **0ms Latency Caching:** Incorporates an MD5 in-memory hashing engine. After the first load, repeated hits to unchanged HTML are served with zero compute overhead.
+1. **Sub-0.02ms Latency Caching:** Incorporates an MD5 in-memory hashing engine. After the first load, repeated hits to unchanged HTML are served with sub-0.02ms compute overhead (measured: 0.0028ms median for small pages).
 2. **Confidence-Scoring Classifier:** We use a proprietary scoring system (checking URL paths, HTML tags, and OpenGraph metadata). If a page doesn't meet the `min_confidence` threshold, the library safely aborts, ensuring we never hallucinate a `node_modules` page as an Article.
 3. **Semantic DOM Mutations:** Automatically injects `data-ai-field` and `data-ai-action` attributes directly into your HTML nodes, providing immense value for screen readers and visual AI agents.
 
@@ -30,14 +30,16 @@ AutoAI-Optimize is uniquely designed to capture **both** methods that AI agents 
 
 By solving for *both* behaviors simultaneously, you ensure that every AI engine on the planet will perfectly understand and cite your business.
 
-## Mathematical Performance Proof
-Developers naturally hesitate to add middleware. We proved mathematically that this library introduces **zero performance penalty** under heavy traffic via our Thread-Safe MD5 LRU Cache.
+## Performance Proof (Measured, Not Claimed)
+Developers naturally hesitate to add middleware. We measured the overhead across three payload tiers with 100 repetitions each — run `python benchmark.py` yourself.
 
-| Metric | Time | Description |
-|--------|------|-------------|
-| **Cold Start** | `2.36 ms` | Initial BeautifulSoup parsing, extraction, and injection. |
-| **Warm Start (Cache Hit)** | `0.0139 ms` | Returning enriched HTML from MD5 Cache. |
-| **High Throughput Avg** | `0.0028 ms` | Average time per request over 1,000 consecutive requests. |
+| Payload | Cold Start (mean) | Warm Cache Hit (median) | Description |
+|---------|-------------------|----------------------|-------------|
+| **Small (~0.3KB)** | `1.01 ms` | `0.0028 ms` | Minimal page, single product. |
+| **Medium (~50KB)** | `17.02 ms` | `0.0147 ms` | Realistic product page with nav/footer. |
+| **Large (~500KB)** | `85.09 ms` | `0.3475 ms` | Long-form article with heavy markup. |
+
+> Concurrency (8 threads, 400 contended calls): **0.012ms** per call, zero errors. Rotating pool (200 unique pages, 1000 requests): **0.121ms** per call.
 
 ## System Architecture
 
@@ -154,7 +156,7 @@ AUTOAI_OPTIMIZE = {
 ## ⚡ The Super-Fast AI Endpoint (`/api/ai`)
 If you generated a schema file using the folder scanner (e.g., `website_schemas.json`), our Django and FastAPI middlewares automatically intercept requests to `/api/ai` and serve the JSON file directly. 
 
-This skips HTML rendering entirely and delivers your entire website structure to AI agents (like ChatGPT) in under **50 milliseconds**.
+This skips HTML rendering entirely and delivers your entire website structure to AI agents (like ChatGPT) with negligible latency (a single disk-read, typically under 5ms).
 
 ---
 
@@ -202,29 +204,29 @@ Migration steps for large sites:
 2. Enable require_explicit_opt_in=True and set allow_paths to whitelist public content if you want strict control.
 3. Provide AUTOAI_API_KEY in environment and configure webhook_url for CDN sync.
 
-## Release 0.1.1 — 2026-07-10
+## Release 1.0.1 — 2026-07-11
 
-This patch release includes production hardening and performance improvements aimed at safe deployment on high-traffic sites:
+This release addresses the comprehensive review in IMPROVEMENTS.md:
 
-- Thread-safe in-memory LRU cache with TTL for zero-cost repeat hits
-- Async/ASGI-safe FastAPI middleware (parsing offloaded to threadpool)
-- Offload pre-scan tool to populate runtime cache during deploys
-- Stronger idempotency checks to avoid duplicate JSON-LD injections
-- Deny-listing, explicit opt-in for sensitive paths, and secure webhook sync with retries/backoff
-- Locale-aware price parsing and JS-render detection for prerender guidance
-- Observability counters (METRICS) and comprehensive tests (61 passed)
+- **Django middleware bug fix**: fixed `response.pop("Content-Length")` crash (`HttpResponse` has no `.pop()`)
+- **Price parsing fixes**: post-symbol prices (`49.99£`), EU decimal commas (`1.234,56 €`), currency-code prefix (`EUR 1.234,56`)
+- **`<time>` element fix**: `datePublished` now correctly extracted from `<time datetime="...">` tags
+- **Idempotency fix**: relative vs absolute URL mismatch no longer causes duplicate JSON-LD injection
+- **Test coverage**: 61 → 141 tests, 72% → 89% coverage, Django middleware 0% → 93%
+- **CI pipeline**: GitHub Actions workflow (pytest + coverage on Python 3.10/3.11/3.12)
+- **Benchmark rewrite**: statistical (100 reps, mean/median/stdev), 3 payload tiers, no-middleware baseline, concurrency, rotating-pool, classifier accuracy
+- **README accuracy**: sourced marketing claims, measured performance numbers
+- **PyPI classifier**: updated to `4 - Beta`
 
-Upgrade notes: run the offload pre-scan during your next deploy to warm the cache for minimal runtime overhead.
-
-### Verification status (2026-07-10)
+### Verification status (2026-07-11)
 
 Ran full test suite from project root with:
 
 ```powershell
-$env:PYTHONPATH = "src"; python -m pytest
+$env:PYTHONPATH = "src"; python -m pytest --cov=autoai_optimize --cov-report=term-missing
 ```
 
-Result: **61 passed, 1 warning** (Starlette TestClient deprecation warning) in 4.88s.
+Result: **141 passed, 1 warning** (Starlette TestClient deprecation warning) — **89% coverage**.
 
 ## License
 MIT

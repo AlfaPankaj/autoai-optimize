@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from autoai_optimize.analyze.classifier import PageType, classify
+from src.autoai_optimize.analyze.classifier import PageType, classify
 
 
 def _soup(html: str) -> BeautifulSoup:

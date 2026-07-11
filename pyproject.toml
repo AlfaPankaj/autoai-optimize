@@ -23,7 +23,7 @@ keywords = [
     "middleware",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Framework :: FastAPI",
     "Framework :: Django",
     "Intended Audience :: Developers",

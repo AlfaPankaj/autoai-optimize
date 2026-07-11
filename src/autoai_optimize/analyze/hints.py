@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from autoai_optimize.analyze.classifier import PageType
+from src.autoai_optimize.analyze.classifier import PageType
 
 # Canonical header a framework adapter may set on a response.
 HINT_HEADER = "X-AutoAI-Type"

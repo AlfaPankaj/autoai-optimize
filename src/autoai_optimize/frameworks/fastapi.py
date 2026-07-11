@@ -43,10 +43,10 @@ from starlette.requests import Request  # type: ignore
 from starlette.responses import Response  # type: ignore
 from starlette.routing import Match  # type: ignore
 
-from autoai_optimize.analyze.hints import HINT_HEADER
-from autoai_optimize.config import Config
-from autoai_optimize.core import optimize_html
-from autoai_optimize.utils import get_logger, is_html_content_type
+from src.autoai_optimize.analyze.hints import HINT_HEADER
+from src.autoai_optimize.config import Config
+from src.autoai_optimize.core import optimize_html
+from src.autoai_optimize.utils import get_logger, is_html_content_type
 
 _log = get_logger()
 

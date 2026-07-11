@@ -1,0 +1,137 @@
+{
+  "latency": [
+    {
+      "payload": "small (~0.3KB)",
+      "baseline_mean_ms": 0.00011800017091445625,
+      "cold_mean_ms": 1.013900001271395,
+      "cold_median_ms": 0.8019000015337951,
+      "cold_stdev_ms": 0.6653217892358176,
+      "warm_mean_ms": 0.0028239998209755868,
+      "warm_median_ms": 0.0027999922167509794,
+      "warm_stdev_ms": 0.0003169052740332338,
+      "throughput_mean_ms": 0.0028119998751208186,
+      "throughput_median_ms": 0.002700006007216871,
+      "overhead_vs_baseline_pct": 2293.2167208663063
+    },
+    {
+      "payload": "medium (~50KB)",
+      "baseline_mean_ms": 0.00010400006431154907,
+      "cold_mean_ms": 17.020994998165406,
+      "cold_median_ms": 16.659599990816787,
+      "cold_stdev_ms": 1.4195786431772954,
+      "warm_mean_ms": 0.014772000286029652,
+      "warm_median_ms": 0.014700010069645941,
+      "warm_stdev_ms": 0.0003728354860281706,
+      "throughput_mean_ms": 0.01471599971409887,
+      "throughput_median_ms": 0.014699995517730713,
+      "overhead_vs_baseline_pct": 14103.837645501571
+    },
+    {
+      "payload": "large (~500KB)",
+      "baseline_mean_ms": 0.00010400020983070135,
+      "cold_mean_ms": 85.08766500017373,
+      "cold_median_ms": 81.49294999748236,
+      "cold_stdev_ms": 7.334146046940167,
+      "warm_mean_ms": 0.3501150003285147,
+      "warm_median_ms": 0.3474500044831075,
+      "warm_stdev_ms": 0.011049048112742904,
+      "throughput_mean_ms": 0.34477900044294074,
+      "throughput_median_ms": 0.33989999792538583,
+      "overhead_vs_baseline_pct": 336548.3595547123
+    }
+  ],
+  "concurrency": {
+    "workers": 8,
+    "calls_per_worker": 50,
+    "total_calls": 400,
+    "wall_time_s": 0.004803200004971586,
+    "per_call_ms": 0.012008000012428965,
+    "errors": []
+  },
+  "rotating_pool": {
+    "pool_size": 200,
+    "total_requests": 1000,
+    "wall_time_s": 0.12094229999638628,
+    "per_call_ms": 0.12094229999638628,
+    "estimated_cache_hit_rate_pct": 80.0
+  },
+  "accuracy": {
+    "total": 11,
+    "true_positive": 6,
+    "false_positive": 0,
+    "false_negative": 0,
+    "true_negative": 5,
+    "accuracy_pct": 100.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_positive_rate": 0.0,
+    "per_case": [
+      {
+        "path": "/products/widget-x",
+        "expected": "Product",
+        "predicted": "Product",
+        "correct": true
+      },
+      {
+        "path": "/shop/item-42",
+        "expected": "Product",
+        "predicted": "Product",
+        "correct": true
+      },
+      {
+        "path": "/p/abc",
+        "expected": "Product",
+        "predicted": "Product",
+        "correct": true
+      },
+      {
+        "path": "/blog/how-to-test",
+        "expected": "Article",
+        "predicted": "Article",
+        "correct": true
+      },
+      {
+        "path": "/news/today",
+        "expected": "Article",
+        "predicted": "Article",
+        "correct": true
+      },
+      {
+        "path": "/post/123",
+        "expected": "Article",
+        "predicted": "Article",
+        "correct": true
+      },
+      {
+        "path": "/admin/dashboard",
+        "expected": "Unknown",
+        "predicted": "Unknown",
+        "correct": true
+      },
+      {
+        "path": "/login",
+        "expected": "Unknown",
+        "predicted": "Unknown",
+        "correct": true
+      },
+      {
+        "path": "/node_modules/react/index.js",
+        "expected": "Unknown",
+        "predicted": "Unknown",
+        "correct": true
+      },
+      {
+        "path": "/",
+        "expected": "Unknown",
+        "predicted": "Unknown",
+        "correct": true
+      },
+      {
+        "path": "/404",
+        "expected": "Unknown",
+        "predicted": "Unknown",
+        "correct": true
+      }
+    ]
+  }
+}

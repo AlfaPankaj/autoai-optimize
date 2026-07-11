@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 
-from autoai_optimize.utils import LRUCache
+from src.autoai_optimize.utils import LRUCache
 
 
 def test_lru_cache_set_get_and_ttl():
