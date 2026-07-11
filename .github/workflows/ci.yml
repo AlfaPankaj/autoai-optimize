@@ -30,7 +30,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=src python -m pytest --cov=autoai_optimize --cov-report=term-missing --cov-fail-under=80
+          PYTHONPATH=src python -m pytest --cov=src/autoai_optimize --cov-report=term-missing --cov-fail-under=80
 
       - name: Run benchmark
         run: |
