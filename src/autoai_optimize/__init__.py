@@ -11,8 +11,14 @@ Public API:
 
 from __future__ import annotations
 
+import importlib.metadata
+
 from autoai_optimize.config import Config
 from autoai_optimize.core import generate_jsonld, optimize_html
 
 __all__ = ["Config", "__version__", "generate_jsonld", "optimize_html"]
-__version__ = "0.1.1"
+
+try:
+    __version__ = importlib.metadata.version("autoai-optimize")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "unknown"
