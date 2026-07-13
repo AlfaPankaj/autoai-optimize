@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from urllib.error import URLError
 
-from src.autoai_optimize.config import Config
-from src.autoai_optimize.core import sync_updates
+from autoai_optimize.config import Config
+from autoai_optimize.core import sync_updates
 
 
 class DummyResp:

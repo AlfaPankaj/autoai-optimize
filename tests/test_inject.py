@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from src.autoai_optimize.inject.html import existing_ld_types, inject_jsonld
+from autoai_optimize.inject.html import existing_ld_types, inject_jsonld
 
 
 class TestExistingLdTypes:

@@ -18,8 +18,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.testclient import TestClient
 
-from src.autoai_optimize.config import Config
-from src.autoai_optimize.frameworks.fastapi import AutoAIMiddleware
+from autoai_optimize.config import Config
+from autoai_optimize.frameworks.fastapi import AutoAIMiddleware
 
 LD_MARKER = '<script type="application/ld+json">'
 

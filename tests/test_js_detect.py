@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.autoai_optimize.analyze.jsdetect import detect_js_rendered
+from autoai_optimize.analyze.jsdetect import detect_js_rendered
 
 
 def test_detects_small_shell_with_root_div_and_scripts():

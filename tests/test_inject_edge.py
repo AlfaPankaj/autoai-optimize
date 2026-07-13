@@ -14,7 +14,7 @@ import json
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.inject.html import (
+from autoai_optimize.inject.html import (
     _collect_nodes,
     _extract_types,
     existing_ld_nodes,

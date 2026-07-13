@@ -22,8 +22,8 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory, override_settings
 
-from src.autoai_optimize.config import Config
-from src.autoai_optimize.frameworks.django import AutoAIMiddleware, _load_config
+from autoai_optimize.config import Config
+from autoai_optimize.frameworks.django import AutoAIMiddleware, _load_config
 
 # ---------------------------------------------------------------------------
 # Minimal Django settings configuration (idempotent).

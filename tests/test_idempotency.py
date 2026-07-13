@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.autoai_optimize.core import generate_jsonld, optimize_html
+from autoai_optimize.core import generate_jsonld, optimize_html
 
 
 def test_generate_jsonld_skips_existing_identical():

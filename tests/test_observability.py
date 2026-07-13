@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.autoai_optimize.core import generate_jsonld, optimize_html
-from src.autoai_optimize.utils import METRICS
+from autoai_optimize.core import generate_jsonld, optimize_html
+from autoai_optimize.utils import METRICS
 
 
 def test_metrics_increment_on_generate_and_optimize():

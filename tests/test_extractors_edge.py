@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.analyze.extractors import (
+from autoai_optimize.analyze.extractors import (
     _extract_price,
     extract_article,
     extract_product,
     extract_profile,
 )
-from src.autoai_optimize.analyze.hints import PageHint
+from autoai_optimize.analyze.hints import PageHint
 
 
 def _soup(html: str) -> BeautifulSoup:

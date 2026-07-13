@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.autoai_optimize.config import Config
+from autoai_optimize.config import Config
 
 
 def test_deny_paths_take_precedence():

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.analyze.extractors import extract_article, extract_product
-from src.autoai_optimize.analyze.hints import PageHint
+from autoai_optimize.analyze.extractors import extract_article, extract_product
+from autoai_optimize.analyze.hints import PageHint
 
 
 def _soup(html: str) -> BeautifulSoup:

@@ -33,8 +33,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.analyze.classifier import PageType, classify
-from src.autoai_optimize.core import _CACHE, generate_jsonld, optimize_html
+from autoai_optimize.analyze.classifier import PageType, classify
+from autoai_optimize.core import _CACHE, generate_jsonld, optimize_html
 
 # ---------------------------------------------------------------------------
 # Payload fixtures of varying size

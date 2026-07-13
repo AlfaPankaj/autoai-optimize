@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.autoai_optimize.config import Config
-from src.autoai_optimize.frameworks.base import BaseAdapter, should_process_path
+from autoai_optimize.config import Config
+from autoai_optimize.frameworks.base import BaseAdapter, should_process_path
 
 
 # ---------------------------------------------------------------------------
