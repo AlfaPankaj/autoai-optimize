@@ -15,6 +15,8 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
+from autoai_optimize.utils import parse_html
+
 LD_SCRIPT_TYPE = "application/ld+json"
 
 
@@ -93,21 +95,38 @@ def _extract_types(parsed: Any) -> set[str]:
 def inject_jsonld(html: str, node: dict[str, Any]) -> str:
     """Inject a single JSON-LD node into the HTML's <head>.
 
-    Returns the (possibly unchanged) HTML string. Uses the 'html.parser' built
-    into BeautifulSoup to avoid a hard lxml dependency; callers that want the
-    faster lxml parser may pre-parse and pass results via core.py instead.
+    Returns the (possibly unchanged) HTML string. Uses lxml when available,
+    falling back to html.parser for zero hard dependencies.
+
+    Fragment-safe: when the input has no <html> tag (an HTMX/AJAX/template
+    fragment), the JSON-LD script is prepended inline rather than wrapping the
+    fragment in a synthetic full document.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    # Detect fragments from the raw input string BEFORE parsing, because lxml
+    # always synthesizes an <html> wrapper even for bare fragments — making
+    # soup.html unreliable for this check.
+    _lower = html.strip()[:200].lower()
+    is_full_document = "<html" in _lower or "<!doctype" in _lower
+
+    # Fragment path: no <html> in the original input means this is a partial
+    # response (HTMX, AJAX, template fragment). Prepend the JSON-LD inline;
+    # do NOT wrap it in a synthetic <html>/<body> document — that would break
+    # fragment consumers.
+    if not is_full_document:
+        script_html = (
+            f'<script type="{LD_SCRIPT_TYPE}">'
+            f'{json.dumps(node, ensure_ascii=False, separators=(",", ":"))}'
+            f'</script>'
+        )
+        return script_html + html
+
+    soup = parse_html(html)
+
+    # Full-document path: ensure there's a <head> to inject into.
     head = soup.head
     if head is None:
-        # Ensure there's a <head> to inject into.
-        if soup.html is None:
-            soup = BeautifulSoup(f"<html><head></head><body>{html}</body></html>", "html.parser")
-            head = soup.head
-            assert head is not None  # we just created it
-        else:
-            head = soup.new_tag("head")
-            soup.html.insert(0, head)
+        head = soup.new_tag("head")
+        soup.html.insert(0, head)
 
     script = soup.new_tag("script", type=LD_SCRIPT_TYPE)
     script.string = json.dumps(node, ensure_ascii=False, separators=(",", ":"))

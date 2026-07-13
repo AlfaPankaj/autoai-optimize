@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.autoai_optimize.analyze.classifier import PageType
-from src.autoai_optimize.schema.article import ArticleBuilder
-from src.autoai_optimize.schema.base import SchemaBuilder
-from src.autoai_optimize.schema.product import ProductBuilder
-from src.autoai_optimize.schema.profile import ProfileBuilder
+from autoai_optimize.analyze.classifier import PageType
+from autoai_optimize.schema.article import ArticleBuilder
+from autoai_optimize.schema.base import SchemaBuilder
+from autoai_optimize.schema.product import ProductBuilder
+from autoai_optimize.schema.profile import ProfileBuilder
 
 _BUILDERS: dict[PageType, SchemaBuilder] = {
     PageType.ARTICLE: ArticleBuilder(),

@@ -268,7 +268,8 @@ class TestAiEndpoint:
         schema_file.write_text('{"@type": "WebSite", "name": "Demo"}', encoding="utf-8")
         monkeypatch.chdir(tmp_path)
 
-        mw = _build_middleware()
+        # Opt-in required now (serve_ai_endpoint=True).
+        mw = _build_middleware(Config(serve_ai_endpoint=True))
         # The view returns HTML, but the middleware should intercept /api/ai
         # and respond with the JSON schema instead.
         request = RequestFactory().get("/api/ai")
@@ -285,13 +286,42 @@ class TestAiEndpoint:
         # Ensure no file is present.
         assert not (tmp_path / "website_schemas.json").exists()
 
-        mw = _build_middleware()
+        mw = _build_middleware(Config(serve_ai_endpoint=True))
         request = RequestFactory().get("/api/ai")
         response = mw(request)
 
         assert isinstance(response, JsonResponse)
         assert response.status_code == 200
         assert "status" in response.content.decode("utf-8")
+
+    def test_ai_endpoint_disabled_by_default(self, monkeypatch, tmp_path):
+        """Security: /api/ai must NOT serve the catalog unless opted in."""
+        (tmp_path / "website_schemas.json").write_text('{"@type": "WebSite"}', encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        # Default config -> serve_ai_endpoint=False -> endpoint inert, falls through.
+        mw = _build_middleware(Config())
+        request = RequestFactory().get("/api/ai")
+        response = mw(request)
+        # Falls through to the view (which returns PRODUCT_HTML), not the schema.
+        assert not isinstance(response, JsonResponse)
+        assert "Super Widget" in response.content.decode("utf-8")
+
+    def test_ai_endpoint_requires_bearer_key_when_set(self, monkeypatch, tmp_path):
+        """When ai_endpoint_key is set, requests without it get 401."""
+        (tmp_path / "website_schemas.json").write_text('{"@type": "WebSite"}', encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        mw = _build_middleware(
+            Config(serve_ai_endpoint=True, ai_endpoint_key="secret-key")
+        )
+        # No auth header -> 401.
+        r1 = mw(RequestFactory().get("/api/ai"))
+        assert r1.status_code == 401
+        # Wrong key -> 401.
+        r2 = mw(RequestFactory().get("/api/ai", HTTP_AUTHORIZATION="Bearer wrong"))
+        assert r2.status_code == 401
+        # Correct key -> 200 with schema.
+        r3 = mw(RequestFactory().get("/api/ai", HTTP_AUTHORIZATION="Bearer secret-key"))
+        assert r3.status_code == 200
 
 
 # ---------------------------------------------------------------------------

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.autoai_optimize.schema.base import LD_CONTEXT, LD_TYPE_KEY, SchemaBuilder, _clean
+from autoai_optimize.schema.base import LD_CONTEXT, LD_TYPE_KEY, SchemaBuilder, _clean
 
 
 class ArticleBuilder(SchemaBuilder):

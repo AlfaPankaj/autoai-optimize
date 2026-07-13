@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bs4 import BeautifulSoup
+from autoai_optimize.utils import parse_html
 
 
 def detect_js_rendered(html: str) -> bool:
@@ -12,7 +12,7 @@ def detect_js_rendered(html: str) -> bool:
     """
     if not html:
         return False
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     body = soup.body
     # Heuristic rules: very small body text, presence of a root app div, many
     # <script> tags, or presence of known SPA markers.

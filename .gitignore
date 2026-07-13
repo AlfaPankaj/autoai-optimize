@@ -35,3 +35,6 @@ phase_one_plan.md
 Gaps.txt
 session_id.txt
 website_schemas*.json
+
+# AI tool embedding indexes (Copilot/Cursor internal files)
+persist_*/

@@ -13,9 +13,9 @@ By making your website semantically readable, you dramatically improve **SEO**, 
 ## Why This Matters (For Business & Marketing Leaders)
 AI Search Engines don't "read" websites the way humans do. If an AI can't parse your product catalog or blog, you lose traffic. 
 1. **Higher CTR:** Studies consistently show that pages with structured JSON-LD earn higher click-through rates in search results (source: [Google Search Central](https://developers.google.com/search/docs/appearance/structured-data/search-results)). Your mileage varies — measure your own A/B results.
-2. **Instant Indexing:** Sync updates to AI engines in **seconds** via Webhooks, rather than waiting 24+ hours for traditional crawlers.
+2. **Faster Indexing:** Trigger webhook notifications to AI engines on deploy, rather than waiting 24+ hours for traditional crawlers. *(Requires configuring a third-party indexing API — see webhook docs.)*
 3. **AI Search Visibility:** Perplexity, Claude, and Gemini heavily prioritize websites that offer well-structured data.
-4. **Zero Maintenance:** The Python library dynamically auto-updates as your site changes. No manual JSON editing required.
+4. **Response-Time Processing:** The library generates JSON-LD at response time from live HTML — no manual JSON editing required. *(Note: Schema reflects whatever HTML is rendered at request time; if content changes in the database, the JSON-LD updates on the next page render.)*
 
 ## Why This Matters (For Engineering Leaders)
 This library is built with a highly modular architecture focused on **performance** and **safety**:
@@ -23,12 +23,12 @@ This library is built with a highly modular architecture focused on **performanc
 2. **Confidence-Scoring Classifier:** We use a proprietary scoring system (checking URL paths, HTML tags, and OpenGraph metadata). If a page doesn't meet the `min_confidence` threshold, the library safely aborts, ensuring we never hallucinate a `node_modules` page as an Article.
 3. **Semantic DOM Mutations:** Automatically injects `data-ai-field` and `data-ai-action` attributes directly into your HTML nodes, providing immense value for screen readers and visual AI agents.
 
-## 100% AI Bot Coverage (The Traffic Multiplier)
-AutoAI-Optimize is uniquely designed to capture **both** methods that AI agents use to crawl the web, guaranteeing that your site's traffic increases rapidly:
-1. **The Bulk Crawlers (Googlebot, SearchGPT):** Advanced bots look for `/api/ai` endpoints in `robots.txt` or `<link>` tags. This allows them to download your entire `website_schemas.json` map in one shot, instantly understanding all products and articles without slow HTML parsing.
-2. **The Direct Visitors (ChatGPT, Claude, Perplexity):** When a user drops a direct link into ChatGPT, the bot does not check endpoints—it visits the HTML directly. AutoAI-Optimize's **Inline JSON-LD Injection** ensures that the AI instantly spots the `<script type="application/ld+json">` tag, bypassing messy CSS and reading pure intelligence.
+## Dual-Channel AI Discovery
+AutoAI-Optimize addresses **both** methods that AI agents use to crawl the web:
+1. **Bulk Crawlers (Googlebot, SearchGPT):** The optional `/api/ai` endpoint (opt-in, with bearer auth) serves your `website_schemas.json` manifest in one shot — no HTML parsing needed.
+2. **Direct Visitors (ChatGPT, Claude, Perplexity):** When a user drops a link into ChatGPT, the bot visits the HTML directly. AutoAI-Optimize's **Inline JSON-LD Injection** ensures the AI reads the `<script type="application/ld+json">` tag instead of guessing from messy markup.
 
-By solving for *both* behaviors simultaneously, you ensure that every AI engine on the planet will perfectly understand and cite your business.
+Currently supports **3 Schema.org types**: `Article`, `Product`, and `Profile`. Additional types (Organization, FAQ, Event, etc.) are planned for future releases.
 
 ## Performance Proof (Measured, Not Claimed)
 Developers naturally hesitate to add middleware. We measured the overhead across three payload tiers with 100 repetitions each — run `python benchmark.py` yourself.

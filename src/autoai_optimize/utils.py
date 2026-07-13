@@ -4,7 +4,32 @@ from __future__ import annotations
 
 import logging
 
+from bs4 import BeautifulSoup
+
 _logger: logging.Logger | None = None
+
+
+def _preferred_parser() -> str:
+    """Return the best available BeautifulSoup parser name.
+
+    Prefers 'lxml' when installed (faster, better fidelity for real-world
+    HTML), falls back to the stdlib 'html.parser' so the library has no hard
+    lxml dependency.
+    """
+    try:
+        import lxml  # noqa: F401
+    except ImportError:
+        return "html.parser"
+    return "lxml"
+
+
+def parse_html(html: str) -> BeautifulSoup:
+    """Parse HTML with the best available parser (lxml if present).
+
+    Centralizes parser selection so every entry point uses the same one and
+    lxml can be adopted as a performance/fidelity win without code churn.
+    """
+    return BeautifulSoup(html, _preferred_parser())
 
 
 def get_logger() -> logging.Logger:
@@ -28,12 +53,17 @@ def is_html_content_type(content_type: str | None) -> bool:
 
 
 class LRUCache:
-    """A simple thread-safe LRU cache with TTL per entry.
+    """A thread-safe LRU cache with per-entry TTL.
 
     Usage:
         cache = LRUCache(max_size=1024, ttl_seconds=300)
         v = cache.get(k)
         cache.set(k, v)
+
+    Eviction is lazy: ``get`` only checks TTL for the requested key (O(1)),
+    and ``set`` batch-purges expired entries only when the cache is near
+    capacity. This avoids the O(n) full-scan on every access that the
+    original implementation had.
     """
 
     def __init__(self, max_size: int = 1024, ttl_seconds: int = 300) -> None:
@@ -47,36 +77,48 @@ class LRUCache:
         self._lock = threading.Lock()
         self._time = time
 
-    def _purge_expired(self) -> None:
-        now = self._time.time()
-        keys_to_delete: list[str] = []
-        for k, (ts, _) in list(self._data.items()):
-            if ts + self.ttl < now:
-                keys_to_delete.append(k)
-        for k in keys_to_delete:
-            self._data.pop(k, None)
-
     def get(self, key: str) -> object | None:
-        """Return value or None if missing/expired."""
+        """Return value or None if missing/expired.
+
+        Only checks TTL for the requested key — O(1), not O(n).
+        """
         with self._lock:
-            self._purge_expired()
             item = self._data.get(key)
             if item is None:
                 return None
             _ts, val = item
-            # Move to end as most recently used
+            # Lazy TTL check: only for this key.
+            if self._time.time() - _ts > self.ttl:
+                del self._data[key]
+                return None
+            # Move to end as most recently used.
             self._data.move_to_end(key)
             return val
 
     def set(self, key: str, value: object) -> None:
-        """Set value for key and enforce max_size/TTL."""
+        """Set value for key and enforce max_size.
+
+        Batch-purges expired entries only when the cache is near capacity,
+        amortizing the cost across many insertions.
+        """
         with self._lock:
-            self._purge_expired()
             self._data[key] = (self._time.time(), value)
             self._data.move_to_end(key)
-            # Evict oldest when over capacity
-            while len(self._data) > self.max_size:
-                self._data.popitem(last=False)
+            # Evict expired + oldest when over capacity.
+            if len(self._data) > self.max_size:
+                self._purge_expired()
+                while len(self._data) > self.max_size:
+                    self._data.popitem(last=False)
+
+    def _purge_expired(self) -> None:
+        """Remove all expired entries. Only called near capacity."""
+        now = self._time.time()
+        keys_to_delete: list[str] = []
+        for k, (ts, _) in list(self._data.items()):
+            if now - ts > self.ttl:
+                keys_to_delete.append(k)
+        for k in keys_to_delete:
+            self._data.pop(k, None)
 
     def clear(self) -> None:
         with self._lock:

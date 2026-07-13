@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-07-13T07:02:32+00:00",
+  "source": "C:\\Users\\PANKAJ\\Documents\\GitHub\\AutoAI-Optimize_py_library\\sample_site",
+  "summary": {
+    "scanned": 2,
+    "enriched": 0,
+    "skipped": 2
+  },
+  "pages": [
+    {
+      "file": "C:\\Users\\PANKAJ\\Documents\\GitHub\\AutoAI-Optimize_py_library\\sample_site\\dist\\index.html",
+      "url": "https://www.acme-store.com/dist",
+      "type": null,
+      "jsonld": null
+    },
+    {
+      "file": "C:\\Users\\PANKAJ\\Documents\\GitHub\\AutoAI-Optimize_py_library\\sample_site\\index.html",
+      "url": "https://www.acme-store.com/",
+      "type": null,
+      "jsonld": null
+    }
+  ]
+}

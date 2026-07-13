@@ -50,7 +50,8 @@ class TestAiEndpoint:
         schema_file.write_text(json.dumps(schema), encoding="utf-8")
         monkeypatch.chdir(tmp_path)
 
-        app = _client_with_middleware()
+        # Opt-in required now (serve_ai_endpoint=True).
+        app = _client_with_middleware(Config(serve_ai_endpoint=True))
 
         @app.get("/api/ai")
         async def ai():
@@ -65,7 +66,7 @@ class TestAiEndpoint:
 
     def test_ai_endpoint_without_file_returns_status(self, monkeypatch, tmp_path):
         monkeypatch.chdir(tmp_path)
-        app = _client_with_middleware()
+        app = _client_with_middleware(Config(serve_ai_endpoint=True))
 
         @app.get("/api/ai")
         async def ai():
@@ -75,6 +76,46 @@ class TestAiEndpoint:
             r = client.get("/api/ai")
             assert r.status_code == 200
             assert "status" in r.json()
+
+    def test_ai_endpoint_disabled_by_default(self, monkeypatch, tmp_path):
+        """Security: /api/ai must NOT serve the catalog unless opted in."""
+        (tmp_path / "website_schemas.json").write_text('[{"@type": "Product"}]', encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        # Default config -> serve_ai_endpoint=False -> endpoint is inert.
+        app = _client_with_middleware(Config())
+
+        @app.get("/api/ai")
+        async def ai():
+            return HTMLResponse("fallback page")
+
+        with TestClient(app) as client:
+            r = client.get("/api/ai")
+            # Should fall through to the route, not serve the schema.
+            assert "fallback page" in r.text
+            assert r.json() if "json" in r.headers.get("content-type", "") else True
+
+    def test_ai_endpoint_requires_bearer_key_when_set(self, monkeypatch, tmp_path):
+        """When ai_endpoint_key is set, requests without it get 401."""
+        (tmp_path / "website_schemas.json").write_text('[{"@type": "Product"}]', encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        app = _client_with_middleware(
+            Config(serve_ai_endpoint=True, ai_endpoint_key="secret-key")
+        )
+
+        @app.get("/api/ai")
+        async def ai():
+            return HTMLResponse("x")
+
+        with TestClient(app) as client:
+            # No auth header -> 401.
+            r1 = client.get("/api/ai")
+            assert r1.status_code == 401
+            # Wrong key -> 401.
+            r2 = client.get("/api/ai", headers={"Authorization": "Bearer wrong"})
+            assert r2.status_code == 401
+            # Correct key -> 200 with schema.
+            r3 = client.get("/api/ai", headers={"Authorization": "Bearer secret-key"})
+            assert r3.status_code == 200
 
 
 class TestPathFiltering:

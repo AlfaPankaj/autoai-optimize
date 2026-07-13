@@ -43,10 +43,10 @@ from starlette.requests import Request  # type: ignore
 from starlette.responses import Response  # type: ignore
 from starlette.routing import Match  # type: ignore
 
-from src.autoai_optimize.analyze.hints import HINT_HEADER
-from src.autoai_optimize.config import Config
-from src.autoai_optimize.core import optimize_html
-from src.autoai_optimize.utils import get_logger, is_html_content_type
+from autoai_optimize.analyze.hints import HINT_HEADER
+from autoai_optimize.config import Config
+from autoai_optimize.core import optimize_html
+from autoai_optimize.utils import get_logger, is_html_content_type
 
 _log = get_logger()
 
@@ -75,6 +75,17 @@ class AutoAIMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
 
         path = request.url.path
         if path.startswith(self.config.ai_endpoint):
+            # Opt-in only: the full catalog is an unauthenticated scraping
+            # vector unless explicitly enabled.
+            if not getattr(self.config, "serve_ai_endpoint", False):
+                return response
+            # Optional bearer auth.
+            if self.config.ai_endpoint_key:
+                provided = request.headers.get("authorization", "")
+                if provided != f"Bearer {self.config.ai_endpoint_key}":
+                    from starlette.responses import JSONResponse
+                    return JSONResponse({"error": "unauthorized"}, status_code=401)
+
             import json
             import os
 

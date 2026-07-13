@@ -28,7 +28,7 @@ class Config:
     enabled: bool = True
     min_confidence: float = 0.5
     allow_paths: tuple[str, ...] = ()
-    deny_paths: tuple[str, ...] = ()
+    deny_paths: tuple[str, ...] = ("/admin/", "/dashboard/", "/user/")
     # When True, requires paths listed in sensitive_paths to be explicitly
     # present in allow_paths before processing. Useful for large sites where
     # certain prefixes (e.g., /admin/, /user/) must never be auto-scanned
@@ -39,6 +39,14 @@ class Config:
     api_key: str | None = None
     webhook_url: str = "https://api.autoai-optimize.com/webhook"
     ai_endpoint: str = "/api/ai"
+    # When False (default), the /api/ai endpoint is disabled and requests to it
+    # fall through to the app. Set True to serve website_schemas.json. The full
+    # catalog exposes every product/article URL on the site, so it's opt-in to
+    # avoid creating an unauthenticated competitor-scraping vector.
+    serve_ai_endpoint: bool = False
+    # When set, requests to /api/ai must carry `Authorization: Bearer <key>`
+    # matching this value. None = no auth required (use only behind a proxy).
+    ai_endpoint_key: str | None = None
     # Reserved for future per-schema enable flags; kept to avoid config churn.
     _reserved: tuple[str, ...] = field(default=())
 

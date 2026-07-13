@@ -131,13 +131,14 @@ class TestCollectNodesInternals:
 
 class TestInjectJsonldEdge:
     def test_wraps_fragment_with_no_html_tag(self):
-        # A bare fragment (no <html>) gets wrapped so injection can happen.
+        # A bare fragment (no <html>) gets the JSON-LD prepended inline,
+        # NOT wrapped in a synthetic document (which would break HTMX/etc.).
         html = "<div><p>Just a fragment</p></div>"
         node = {"@type": "Article", "headline": "Frag"}
         result = inject_jsonld(html, node)
-        assert "<html" in result
-        assert "<head" in result
         assert "application/ld+json" in result
+        assert "<html" not in result
+        assert "<div><p>Just a fragment</p></div>" in result
 
     def test_creates_head_on_html_without_head(self):
         # <html> present but no <head> -> one is created and prepended.

@@ -13,7 +13,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.analyze.hints import PageHint
+from autoai_optimize.analyze.hints import PageHint
 
 
 def _first_text(
@@ -114,17 +114,51 @@ def extract_article(soup: BeautifulSoup, url: str, hint: PageHint) -> dict[str, 
     return data
 
 
+def _tag_add_to_cart(soup: BeautifulSoup) -> None:
+    """Tag the primary add-to-cart control with data-ai-action="add_to_cart".
+
+    Scoped to a product container (in priority order): the first element with
+    itemprop="offers", then <main>, then the body. Within that scope we prefer a
+    real <button> / role="button" element whose text matches; only as a fallback
+    do we match arbitrary text. This prevents nav links, footers, or
+    testimonials that merely mention "add to cart" from stealing the tag.
+    """
+    import re
+
+    pattern = re.compile(r"add to cart", re.I)
+
+    # 1. Choose the search scope: prefer a narrow product container.
+    scope = soup.find(attrs={"itemprop": "offers"})
+    if scope is None:
+        scope = soup.find("main")
+    if scope is None:
+        scope = soup.body or soup
+
+    # 2. Prefer a real button-like element whose text matches.
+    candidate = None
+    for btn in scope.find_all(["button", "input", "a"]):
+        if btn.get("type", "").lower() in ("submit", "button") or btn.name == "button" or btn.get("role") == "button":
+            text = btn.get_text(" ", strip=True) or (btn.get("value") or "")
+            if pattern.search(text):
+                candidate = btn
+                break
+    # 3. Fallback: any text node match within the scope only.
+    if candidate is None:
+        node = scope.find(string=pattern)
+        if node is not None and node.parent is not None:
+            candidate = node.parent
+
+    if candidate is not None:
+        candidate.attrs["data-ai-action"] = "add_to_cart"
+
+
 def extract_product(soup: BeautifulSoup, url: str, hint: PageHint) -> dict[str, Any]:
     """Extract Product fields from HTML, applying hint overrides last."""
     if soup.body:
         soup.body.attrs["data-ai-entity"] = "product"
-    
-    # Inject action hint for add to cart
-    import re
-    btn = soup.find(string=re.compile(r"add to cart", re.I))
-    if btn and btn.parent:
-        btn.parent.attrs["data-ai-action"] = "add_to_cart"
-        
+
+    _tag_add_to_cart(soup)
+
     data: dict[str, Any] = {}
 
     name = _first_text(

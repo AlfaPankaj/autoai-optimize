@@ -17,13 +17,13 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from src.autoai_optimize.analyze import classify, extract_article, extract_product, parse_hints
-from src.autoai_optimize.analyze.classifier import PageType
-from src.autoai_optimize.analyze.extractors import extract_profile
-from src.autoai_optimize.config import DEFAULT_CONFIG, Config
-from src.autoai_optimize.inject import inject_jsonld, existing_ld_nodes
-from src.autoai_optimize.schema import build_for
-from src.autoai_optimize.utils import LRUCache, get_logger
+from autoai_optimize.analyze import classify, extract_article, extract_product, parse_hints
+from autoai_optimize.analyze.classifier import PageType
+from autoai_optimize.analyze.extractors import extract_profile
+from autoai_optimize.config import DEFAULT_CONFIG, Config
+from autoai_optimize.inject import inject_jsonld, existing_ld_nodes
+from autoai_optimize.schema import build_for
+from autoai_optimize.utils import LRUCache, get_logger, parse_html
 
 _log = get_logger()
 # Thread-safe LRU cache with TTL to avoid unbounded memory growth and ensure
@@ -96,6 +96,29 @@ def _path_of(url: str) -> str:
     return path or "/"
 
 
+def _cache_key(html: str, url: str, config: Config) -> str:
+    """Build a cache key that reflects every input affecting output.
+
+    Includes the HTML body, the request URL (it lands in the JSON-LD `url`
+    field), and the config fields that change what gets emitted. This prevents
+    two calls with identical HTML but different settings from sharing a cache
+    entry (a cross-contamination bug).
+    """
+    # Only the fields that influence the generated HTML are part of the key.
+    config_signature = (
+        config.enabled,
+        config.min_confidence,
+        config.allow_paths,
+        config.deny_paths,
+        config.require_explicit_opt_in,
+        config.sensitive_paths,
+        config.inject_existing,
+        config.ai_endpoint,
+    )
+    payload = f"{url}\0{config_signature}\0{html}".encode("utf-8")
+    return hashlib.md5(payload).hexdigest()
+
+
 def _classify_with_hints(
     html: str, url: str, context: dict[str, Any] | None, hints: dict[str, Any] | None, config: Config
 ) -> tuple[BeautifulSoup, PageType, Any]:
@@ -103,9 +126,8 @@ def _classify_with_hints(
 
     Returns (soup, page_type, page_hint). Caller decides what to do on UNKNOWN.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     url_path = _path_of(url)
-
     merged: dict[str, Any] = {}
     if context:
         merged.update(context.get("autoai", {}) if isinstance(context, dict) else {})
@@ -142,7 +164,7 @@ def generate_jsonld(
     has this schema (idempotent), or insufficient data for a valid node.
     """
     if not config.enabled or not html:
-        from src.autoai_optimize.utils import METRICS
+        from autoai_optimize.utils import METRICS
         METRICS.incr("skipped.disabled_or_empty")
         return None
     try:
@@ -150,24 +172,24 @@ def generate_jsonld(
         if page_type is PageType.UNKNOWN:
             # Detect JS-rendered shells and increment a separate metric to
             # advise prerendering instead of per-request parsing.
-            from src.autoai_optimize.analyze.jsdetect import detect_js_rendered
+            from autoai_optimize.analyze.jsdetect import detect_js_rendered
             if detect_js_rendered(html):
-                from src.autoai_optimize.utils import METRICS
+                from autoai_optimize.utils import METRICS
                 METRICS.incr("skipped.js_rendered")
                 return None
-            from src.autoai_optimize.utils import METRICS
+            from autoai_optimize.utils import METRICS
             METRICS.incr("skipped.unknown")
             return None
 
         extractor = _EXTRACTORS.get(page_type)
         if extractor is None:
-            from src.autoai_optimize.utils import METRICS
+            from autoai_optimize.utils import METRICS
             METRICS.incr("skipped.no_extractor")
             return None
         data = extractor(soup, url or _path_of(url), page_hint)
         node = build_for(page_type, data)
         if node is None:
-            from src.autoai_optimize.utils import METRICS
+            from autoai_optimize.utils import METRICS
             METRICS.incr("skipped.insufficient_data")
             return None
 
@@ -182,7 +204,7 @@ def generate_jsonld(
                     # ordering differences; a simple equality is still useful).
                     if en == node:
                         _log.debug("autoai-optimize: identical JSON-LD node already present, skipping")
-                        from src.autoai_optimize.utils import METRICS
+                        from autoai_optimize.utils import METRICS
                         METRICS.incr("skipped.existing_identical")
                         return None
                     # Or match by same @type and same url field. Compare by the
@@ -197,19 +219,19 @@ def generate_jsonld(
                         and _path_of(str(en.get("url"))) == _path_of(str(node.get("url")))
                     ):
                         _log.debug("autoai-optimize: JSON-LD of same type and url already present, skipping")
-                        from src.autoai_optimize.utils import METRICS
+                        from autoai_optimize.utils import METRICS
                         METRICS.incr("skipped.existing_same_type_url")
                         return None
             except Exception:
                 # Be conservative: on parser errors, do not fail — proceed.
                 _log.debug("autoai-optimize: existing node check failed, continuing")
 
-        from src.autoai_optimize.utils import METRICS
+        from autoai_optimize.utils import METRICS
         METRICS.incr("generated.jsonld")
         return node
     except Exception as exc:
         _log.warning("autoai-optimize: JSON-LD generation failed (%s)", exc)
-        from src.autoai_optimize.utils import METRICS
+        from autoai_optimize.utils import METRICS
         METRICS.incr("errors.generation")
         return None
 
@@ -240,11 +262,15 @@ def optimize_html(
     """
     if not config.enabled or not html:
         return html
-    html_hash = hashlib.md5(html.encode("utf-8")).hexdigest()
+    # Cache key includes the config fields that affect output + the url, not
+    # just the HTML. Otherwise two callers with the same HTML but different
+    # settings (e.g. different min_confidence, inject_existing) or different
+    # URLs would collide and one would silently get the other's result.
+    html_hash = _cache_key(html, url, config)
     try:
         cached = _CACHE.get(html_hash) if hasattr(_CACHE, "get") else None
         if cached is not None:
-            from src.autoai_optimize.utils import METRICS
+            from autoai_optimize.utils import METRICS
             METRICS.incr("served.cache_hit")
             # Cache may hold any object — ensure we return a str to match API.
             return str(cached)
@@ -252,17 +278,17 @@ def optimize_html(
         if node is None:
             if hasattr(_CACHE, "set"):
                 _CACHE.set(html_hash, html)
-            from src.autoai_optimize.utils import METRICS
+            from autoai_optimize.utils import METRICS
             METRICS.incr("served.no_node")
             return html
         res = inject_jsonld(html, node)
         if hasattr(_CACHE, "set"):
             _CACHE.set(html_hash, res)
-        from src.autoai_optimize.utils import METRICS
+        from autoai_optimize.utils import METRICS
         METRICS.incr("served.enriched")
         return res
     except Exception as exc:
         _log.warning("autoai-optimize: enrichment failed (%s); returning original HTML", exc)
-        from src.autoai_optimize.utils import METRICS
+        from autoai_optimize.utils import METRICS
         METRICS.incr("errors.enrichment")
         return html

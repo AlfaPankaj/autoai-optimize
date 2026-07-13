@@ -63,13 +63,14 @@ class TestShouldProcessPath:
         )
         # /admin/private is sensitive and NOT in allow_paths -> blocked.
         assert should_process_path(cfg, "/admin/private/page") is False
-        # /admin/public is sensitive and explicitly allowed -> passes.
+        # A sensitive path explicitly in allow_paths -> passes.
+        # Use /private/ since /admin/ is now in default deny_paths.
         cfg_allowed = Config(
             require_explicit_opt_in=True,
-            sensitive_paths=("/admin/",),
-            allow_paths=("/admin/public/",),
+            sensitive_paths=("/private/",),
+            allow_paths=("/private/public/",),
         )
-        assert should_process_path(cfg_allowed, "/admin/public/page") is True
+        assert should_process_path(cfg_allowed, "/private/public/page") is True
 
 
 # ---------------------------------------------------------------------------

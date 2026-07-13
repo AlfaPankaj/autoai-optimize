@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoai-optimize"
-version = "1.0.2"
+version = "1.0.3"
 description = "One-line Python middleware that auto-injects Schema.org / JSON-LD into your web pages for better SEO, voice search, and AI-agent discovery."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "AutoAI-Optimize Contributors" }]
+authors = [{ name = "Pankaj", email = "" }]
 keywords = [
     "seo",
     "json-ld",
@@ -41,6 +41,7 @@ dependencies = ["beautifulsoup4>=4.11,<5"]
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.100", "starlette>=0.27"]
 django = ["django>=4.2"]
+lxml = ["lxml>=4.9"]
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
@@ -48,6 +49,7 @@ dev = [
     "httpx>=0.24",
     "fastapi>=0.100",
     "django>=4.2",
+    "lxml>=4.9",
     "ruff>=0.4",
     "mypy>=1.8",
 ]
